@@ -122,9 +122,15 @@
                 <div class="glass rounded-xl p-4">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-bold text-gray-300"><i class="fas fa-clipboard-list mr-2"></i>📝 To Do</h3>
-                        <span class="bg-gray-700 px-3 py-1 rounded-full text-sm" id="count-todo">5</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-700 px-3 py-1 rounded-full text-sm" id="count-todo">8</span>
+                            <button onclick="toggleTodo()" id="todo-toggle-btn" class="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition">
+                                <i class="fas fa-chevron-down"></i> Все
+                            </button>
+                        </div>
                     </div>
                     <div class="task-column space-y-3" id="todo-column">
+                        <!-- Видимые задачи (первые 3) -->
                         <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500">
                             <h4 class="font-semibold mb-1">Доделать telegram-скилл</h4>
                             <p class="text-sm text-gray-400">Мониторинг каналов через Telethon</p>
@@ -147,6 +153,50 @@
                             <div class="flex justify-between items-center mt-2">
                                 <span class="text-xs text-gray-500">SEO</span>
                                 <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Low</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Скрытые задачи (раскрываются) -->
+                        <div id="todo-hidden" class="hidden space-y-3">
+                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <h4 class="font-semibold mb-1">Интеграция с Apify</h4>
+                                <p class="text-sm text-gray-400">Настроить парсинг для StroySales</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">StroySales</span>
+                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500">
+                                <h4 class="font-semibold mb-1">Чат-виджет stekloroll.ru</h4>
+                                <p class="text-sm text-gray-400">HTML/CSS + n8n + OpenRouter AI</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">StekloRoll</span>
+                                    <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">High</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500">
+                                <h4="font-semibold mb-1">Активировать business/lead-gen</h4>
+                                <p class="text-sm text-gray-400">Сделать рабочим скилл генерации лидов</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">Business</span>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Low</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <h4 class="font-semibold mb-1">Загрузить данные в Knowledge Brain</h4>
+                                <p class="text-sm text-gray-400">Книги: Traction, Lean Analytics, Positioning</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">Knowledge</span>
+                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <h4 class="font-semibold mb-1">Настроить cron job для обновления</h4>
+                                <p class="text-sm text-gray-400">Dashboard автообновление в 12:00 MSK</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">System</span>
+                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -243,10 +293,19 @@
                             <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 75%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">CRM</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Автоматизация</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Telegram Bot</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Доделать telegram-скилл</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>Автоматизация КП (75%)</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -267,10 +326,19 @@
                             <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 60%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Веб-сайт</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Чат-виджет</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">AI</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>Чат-виджет (60%)</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Интеграция с CRM</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -291,10 +359,19 @@
                             <div class="bg-yellow-500 h-2 rounded-full progress-bar" style="width: 45%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Supabase</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Парсинг</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">SEO</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Apify интеграция (75%)</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>SEO-контент для категорий</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -315,10 +392,19 @@
                             <div class="bg-yellow-500 h-2 rounded-full progress-bar" style="width: 30%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Архитектура</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">ОКН</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Реставрация</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>Создание сайта бюро</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Портфолио проектов</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -339,10 +425,19 @@
                             <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 50%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Консалтинг</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Стратегия</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Автоматизация</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>ChaikaStore аудит</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Методология диагностики</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -363,10 +458,19 @@
                             <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 80%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">React</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Образование</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">EdTech</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Тренажёр времен (80%)</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>SEO-оптимизация</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -387,10 +491,19 @@
                             <div class="bg-green-500 h-2 rounded-full progress-bar" style="width: 85%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Фото</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">SEO</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Chat Widget</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>SEO-аудит (85%)</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Чат-бот для записи</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -411,10 +524,19 @@
                             <div class="bg-green-500 h-2 rounded-full progress-bar" style="width: 90%"></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-4">
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">n8n</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">Docker</span>
                         <span class="px-2 py-1 bg-gray-700 rounded text-xs">VPS</span>
+                    </div>
+                    
+                    <!-- Текущие задачи -->
+                    <div class="border-t border-gray-700 pt-3 mt-3">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Установлен на VPS (90%)</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Интеграция workflow</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -707,6 +829,20 @@
                 btn.disabled = false;
                 alert('Данные обновлены!');
             }, 1000);
+        }
+
+        // Toggle To Do list expansion
+        function toggleTodo() {
+            const hidden = document.getElementById('todo-hidden');
+            const btn = document.getElementById('todo-toggle-btn');
+            
+            if (hidden.classList.contains('hidden')) {
+                hidden.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Свернуть';
+            } else {
+                hidden.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Все';
+            }
         }
     </script>
 </body>
