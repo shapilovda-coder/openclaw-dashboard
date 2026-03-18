@@ -6,36 +6,40 @@
     <title>🦾 OpenClaw Mission Control</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .skill-card {
-            transition: all 0.3s ease;
-        }
+        .skill-card { transition: all 0.3s ease; }
         .skill-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
-        .progress-bar {
-            transition: width 0.5s ease;
-        }
-        .task-column {
-            min-height: 400px;
-        }
+        .progress-bar { transition: width 0.5s ease; }
         .task-card {
-            cursor: move;
             transition: all 0.2s;
+            cursor: pointer;
         }
-        .task-card:hover {
-            transform: scale(1.02);
+        .task-card:hover { transform: scale(1.02); }
+        .task-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
         }
-        .pulse-dot {
-            animation: pulse 2s infinite;
+        .task-details.expanded {
+            max-height: 500px;
+            transition: max-height 0.3s ease-in;
         }
+        .column-content {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .column-content.expanded {
+            max-height: none;
+        }
+        .pulse-dot { animation: pulse 2s infinite; }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -44,6 +48,18 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        .expand-btn {
+            transition: transform 0.3s;
+        }
+        .expand-btn.rotated {
+            transform: rotate(180deg);
+        }
+        .activity-item {
+            transition: all 0.2s;
+        }
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
@@ -114,594 +130,641 @@
             </div>
         </div>
 
-        <!-- Task Board - Теперь наверху! -->
+        <!-- Task Board - Интерактивный -->
         <section class="mb-8">
-            <h2 class="text-2xl font-bold mb-6"><i class="fas fa-tasks mr-3 text-yellow-400"></i>Task Board <span class="text-sm text-gray-400 font-normal">— Что обсуждали и не доделали</span></h2>
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-tasks mr-3 text-yellow-400"></i>
+                Task Board 
+                <span class="text-sm text-gray-400 font-normal">— Нажми на задачу для деталей</span>
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- To Do -->
                 <div class="glass rounded-xl p-4">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-gray-300"><i class="fas fa-clipboard-list mr-2"></i>📝 To Do</h3>
+                        <h3 class="font-bold text-gray-300">
+                            <i class="fas fa-clipboard-list mr-2"></i>📝 To Do
+                        </h3>
                         <div class="flex items-center space-x-2">
                             <span class="bg-gray-700 px-3 py-1 rounded-full text-sm" id="count-todo">8</span>
-                            <button onclick="toggleTodo()" id="todo-toggle-btn" class="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition">
-                                <i class="fas fa-chevron-down"></i> Все
+                            <button onclick="toggleColumn('todo')" class="expand-btn text-gray-400 hover:text-white transition">
+                                <i class="fas fa-chevron-down"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="task-column space-y-3" id="todo-column">
-                        <!-- Видимые задачи (первые 3) -->
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500">
-                            <h4 class="font-semibold mb-1">Доделать telegram-скилл</h4>
+                    <div class="column-content space-y-3" id="todo-column">
+                        <!-- Task 1 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500" onclick="toggleTask('todo-1')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Доделать telegram-скилл</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
                             <p class="text-sm text-gray-400">Мониторинг каналов через Telethon</p>
                             <div class="flex justify-between items-center mt-2">
                                 <span class="text-xs text-gray-500">ARTALICO</span>
                                 <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">High</span>
                             </div>
+                            <div id="todo-1" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Описание:</strong> Создать рабочий скрипт мониторинга Telegram-каналов с AI-сводкой</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Шаги:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Получить TG_API_ID и TG_API_HASH</li>
+                                    <li>Протестировать channel_monitor.py</li>
+                                    <li>Настроить cron для автозапуска</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Блокер:</strong> Нужны API ключи от пользователя</p>
+                            </div>
                         </div>
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
-                            <h4 class="font-semibold mb-1">Загрузить книги в Knowledge Brain</h4>
+
+                        <!-- Task 2 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500" onclick="toggleTask('todo-2')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Загрузить книги в Knowledge Brain</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
                             <p class="text-sm text-gray-400">Traction, Lean Analytics, Positioning</p>
                             <div class="flex justify-between items-center mt-2">
                                 <span class="text-xs text-gray-500">Knowledge</span>
                                 <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
                             </div>
+                            <div id="todo-2" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Описание:</strong> Загрузить ключевые книги в векторное хранилище для RAG</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Список книг:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Traction — Gabriel Weinberg</li>
+                                    <li>Lean Analytics — Alistair Croll</li>
+                                    <li>Positioning — Al Ries & Jack Trout</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Статус:</strong> Жду файлы от пользователя</p>
+                            </div>
                         </div>
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500">
-                            <h4 class="font-semibold mb-1">SEO-аудит zoya-yakovleva.ru</h4>
+
+                        <!-- Task 3 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500" onclick="toggleTask('todo-3')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">SEO-аудит zoya-yakovleva.ru</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
                             <p class="text-sm text-gray-400">Исправить canonical, добавить Twitter Cards</p>
                             <div class="flex justify-between items-center mt-2">
                                 <span class="text-xs text-gray-500">SEO</span>
                                 <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Low</span>
                             </div>
+                            <div id="todo-3" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Найденные проблемы:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>❌ Отсутствует canonical URL</li>
+                                    <li>❌ Нет Twitter Cards meta tags</li>
+                                    <li>⚠️ JSON-LD нуждается в валидации</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Исправление:</strong> Добавить в &lt;head&gt; сайта</p>
+                            </div>
                         </div>
-                        
-                        <!-- Скрытые задачи (раскрываются) -->
-                        <div id="todo-hidden" class="hidden space-y-3">
-                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
-                                <h4 class="font-semibold mb-1">Интеграция с Apify</h4>
-                                <p class="text-sm text-gray-400">Настроить парсинг для StroySales</p>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="text-xs text-gray-500">StroySales</span>
-                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
-                                </div>
+
+                        <!-- Task 4 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500" onclick="toggleTask('todo-4')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Настроить cron job для статей</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
                             </div>
-                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500">
+                            <p class="text-sm text-gray-400">Автоматическая генерация StroySales статей</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">StroySales</span>
+                                <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                            </div>
+                            <div id="todo-4" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Расписание:</strong> 15:00 MSK ежедневно</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Ротация тем:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Пн: Прозрачные рольставни</li>
+                                    <li>Вт: Защитные рольставни</li>
+                                    <li>Ср: Ворота</li>
+                                    <li>Чт: Безрамное остекление</li>
+                                </ul>
+                                <p class="text-sm text-green-400"><strong>✅ Создано:</strong> Cron job активен (ID: 296c7be6)</p>
+                            </div>
+                        </div>
+
+                        <!-- Task 5 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500" onclick="toggleTask('todo-5')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Открыть порты Alibaba Cloud</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">5678 (n8n) и 8080 (чат-виджет)</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Инфраструктура</span>
+                                <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">High</span>
+                            </div>
+                            <div id="todo-5" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Проблема:</strong> Порты закрыты firewall Alibaba Cloud</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Решение:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Зайти в Alibaba Cloud Console</li>
+                                    <li>Security Groups → добавить правила</li>
+                                    <li>Разрешить 5678/tcp и 8080/tcp</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Блокер:</strong> Нужен доступ к консоли Alibaba</p>
+                            </div>
+                        </div>
+
+                        <!-- Task 6 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500" onclick="toggleTask('todo-6')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Активировать business/lead-gen</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Сделать рабочим скилл генерации лидов</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Business</span>
+                                <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Low</span>
+                            </div>
+                            <div id="todo-6" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Статус:</strong> Каркас SKILL.md есть, нужны скрипты</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Функционал:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Парсинг источников лидов</li>
+                                    <li>AI-квалификация лидов</li>
+                                    <li>Автоматическая отправка в CRM</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Task 7 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500" onclick="toggleTask('todo-7')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">ForumHouse workaround</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Обход DDoS-Guard для парсинга</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">StroySales</span>
+                                <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                            </div>
+                            <div id="todo-7" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Проблема:</strong> DDoS-Guard блокирует все прокси</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Попробовано:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>❌ Apify residential proxy</li>
+                                    <li>❌ ScrapingBee premium</li>
+                                    <li>❌ VPS в Риге</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Варианты:</strong> ZenRows ($9/мес) или ручной сбор</p>
+                            </div>
+                        </div>
+
+                        <!-- Task 8 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500" onclick="toggleTask('todo-8')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">MacBook browser automation</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">OpenClaw на локальном Mac</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Инфраструктура</span>
+                                <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                            </div>
+                            <div id="todo-8" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Цель:</strong> Автоматизация через локальный браузер</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Варианты:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Установить OpenClaw локально на Mac</li>
+                                    <li>Или SSH туннель с VPS на Mac</li>
+                                    <li>Или Chrome Remote Debugging</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="glass rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-blue-400">
+                            <i class="fas fa-spinner mr-2"></i>🚀 In Progress
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-blue-600 px-3 py-1 rounded-full text-sm" id="count-progress">4</span>
+                            <button onclick="toggleColumn('progress')" class="expand-btn text-gray-400 hover:text-white transition">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-content space-y-3" id="progress-column">
+                        <!-- Task 1 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500" onclick="toggleTask('progress-1')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Apify интеграция</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Парсинг поставщиков для StroySales</p>
+                            <div class="w-full bg-gray-700 rounded-full h-2 mt-2 mb-2">
+                                <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 75%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">StroySales</span>
+                                <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">75%</span>
+                            </div>
+                            <div id="progress-1" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Прогресс:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>✅ API ключ проверен</li>
+                                    <li>✅ Скрипты apify_quickstart.py и apify_scraper.py созданы</li>
+                                    <li>⏳ Интеграция с n8n workflow</li>
+                                    <li>⏳ Тестирование парсинга поставщиков</li>
+                                </ul>
+                                <p class="text-sm text-yellow-400"><strong>Блокер:</strong> ForumHouse не парсится (DDoS-Guard)</p>
+                            </div>
+                        </div>
+
+                        <!-- Task 2 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-purple-500" onclick="toggleTask('progress-2')">
+                            <div class="flex justify-between items-start">
                                 <h4 class="font-semibold mb-1">Чат-виджет stekloroll.ru</h4>
-                                <p class="text-sm text-gray-400">HTML/CSS + n8n + OpenRouter AI</p>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">HTML/CSS + n8n + OpenRouter AI</p>
+                            <div class="w-full bg-gray-700 rounded-full h-2 mt-2 mb-2">
+                                <div class="bg-purple-500 h-2 rounded-full progress-bar" style="width: 60%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">StekloRoll</span>
+                                <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">60%</span>
+                            </div>
+                            <div id="progress-2" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Сделано:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>✅ HTML/CSS виджет создан</li>
+                                    <li>✅ n8n workflow импортирован</li>
+                                    <li>✅ Деплой на GitHub</li>
+                                </ul>
+                                <p class="text-sm text-gray-300 mb-2"><strong>В процессе:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside">
+                                    <li>⏳ Добавить OpenRouter credential</li>
+                                    <li>⏳ Активировать workflow</li>
+                                    <li>⏳ Тест webhook</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Task 3 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-green-500" onclick="toggleTask('progress-3')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">StroySales SEO-контент</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Ежедневные статьи для блога</p>
+                            <div class="w-full bg-gray-700 rounded-full h-2 mt-2 mb-2">
+                                <div class="bg-green-500 h-2 rounded-full progress-bar" style="width: 45%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">StroySales</span>
+                                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">45%</span>
+                            </div>
+                            <div id="progress-3" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Опубликовано:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>✅ "Прозрачные рольставни для веранды"</li>
+                                    <li>✅ "Защитные рольставни для дачи"</li>
+                                    <li>✅ "Секционные ворота для гаража" (тест)</li>
+                                </ul>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Следующая:</strong> Среда — "Ворота"</p>
+                                <p class="text-sm text-green-400"><strong>Cron:</strong> Запущен (15:00 MSK)</p>
+                            </div>
+                        </div>
+
+                        <!-- Task 4 -->
+                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500" onclick="toggleTask('progress-4')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1">Product Hunt мониторинг</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Анализ трендов для бизнес-идей</p>
+                            <div class="w-full bg-gray-700 rounded-full h-2 mt-2 mb-2">
+                                <div class="bg-yellow-500 h-2 rounded-full progress-bar" style="width: 30%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">Research</span>
+                                <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">30%</span>
+                            </div>
+                            <div id="progress-4" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Сделано:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>✅ Топ-20 продуктов марта 2026</li>
+                                    <li>✅ Анализ Chronicle, Mocke, n8n AI</li>
+                                    <li>✅ Сравнительная таблица репликации</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Следующий шаг:</strong> Автоматический еженедельный отчёт</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Done -->
+                <div class="glass rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-green-400">
+                            <i class="fas fa-check-circle mr-2"></i>✅ Done
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-green-600 px-3 py-1 rounded-full text-sm" id="count-done">12</span>
+                            <button onclick="toggleColumn('done')" class="expand-btn text-gray-400 hover:text-white transition">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="column-content space-y-3" id="done-column">
+                        <!-- Done Task 1 -->
+                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75" onclick="toggleTask('done-1')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1 line-through">Установить n8n на VPS</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">http://47.237.82.141:5678</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Инфраструктура</span>
+                                <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                            </div>
+                            <div id="done-1" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Дата завершения:</strong> 16 марта 2026</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Что сделано:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Docker установлен</li>
+                                    <li>n8n запущен на порту 5678</li>
+                                    <li>Credentials: admin/Chinasouthern12!</li>
+                                </ul>
+                                <p class="text-sm text-yellow-400"><strong>Примечание:</strong> Порт заблокирован Alibaba Cloud firewall</p>
+                            </div>
+                        </div>
+
+                        <!-- Done Task 2 -->
+                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75" onclick="toggleTask('done-2')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1 line-through">Инвентаризация 32 скиллов</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">SKILLS_INVENTORY.md создан</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Система</span>
+                                <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                            </div>
+                            <div id="done-2" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Результат:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>Всего найдено: 32 скилла</li>
+                                    <li>Активных: 22</li>
+                                    <li>Требуют внимания: 5</li>
+                                    <li>Каркасы: 5</li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Файл:</strong> <code>SKILLS_INVENTORY.md</code></p>
+                            </div>
+                        </div>
+
+                        <!-- Done Task 3 -->
+                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75" onclick="toggleTask('done-3')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1 line-through">Настроить Apify</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">API ключ проверен, скрипты готовы</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Парсинг</span>
+                                <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                            </div>
+                            <div id="done-3" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>API Key:</strong> ✅ Валиден</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>План:</strong> FREE ($5/мес)</p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Созданные файлы:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside">
+                                    <li><code>apify_quickstart.py</code></li>
+                                    <li><code>apify_scraper.py</code></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Done Task 4 -->
+                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75" onclick="toggleTask('done-4')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1 line-through">Создать Mission Control Dashboard</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Визуальный интерфейс проектов</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Dashboard</span>
+                                <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                            </div>
+                            <div id="done-4" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>URL:</strong> <a href="https://openclaw-dashboard-fmcm.onrender.com" class="text-blue-400 underline">openclaw-dashboard-fmcm.onrender.com</a></p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Функции:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li>8 проектов с прогрессом</li>
+                                    <li>Task Board (Kanban)</li>
+                                    <li>32 скилла в сетке</li>
+                                    <li>Activity Log</li>
+                                </ul>
+                                <p class="text-sm text-green-400"><strong>Auto-deploy:</strong> Из GitHub на Render</p>
+                            </div>
+                        </div>
+
+                        <!-- Done Task 5 -->
+                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75" onclick="toggleTask('done-5')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1 line-through">SEO-аудит скрипт</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">Puppeteer + полный анализ</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">SEO</span>
+                                <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                            </div>
+                            <div id="done-5" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Файл:</strong> <code>scripts/seo-audit-puppeteer.js</code></p>
+                                <p class="text-sm text-gray-300 mb-2"><strong>Проверяет:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside">
+                                    <li>Meta tags (title, description)</li>
+                                    <li>Open Graph</li>
+                                    <li>Twitter Cards</li>
+                                    <li>Canonical URL</li>
+                                    <li>JSON-LD</li>
+                                    <li>Performance metrics</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Done Task 6 -->
+                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75" onclick="toggleTask('done-6')">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold mb-1 line-through">Telegram скилл (каркас)</h4>
+                                <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                            </div>
+                            <p class="text-sm text-gray-400">channel_monitor.py + инструкции</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-500">Telegram</span>
+                                <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                            </div>
+                            <div id="done-6" class="task-details mt-3 pt-3 border-t border-gray-700">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Создано:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc list-inside mb-2">
+                                    <li><code>skills/telegram/channel_monitor.py</code></li>
+                                    <li><code>skills/telegram/MONITOR_README.md</code></li>
+                                </ul>
+                                <p class="text-sm text-gray-300"><strong>Функции:</strong> Мониторинг 5 каналов, AI-сводка через OpenRouter</p>
+                            </div>
+                        </div>
+
+                        <!-- More done tasks hidden by default -->
+                        <div id="done-more" class="hidden space-y-3">
+                            <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
+                                <h4 class="font-semibold mb-1 line-through">Cron job для StroySales</h4>
+                                <p class="text-sm text-gray-400">Ежедневная генерация статей</p>
                                 <div class="flex justify-between items-center mt-2">
-                                    <span class="text-xs text-gray-500">StekloRoll</span>
-                                    <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">High</span>
+                                    <span class="text-xs text-gray-500">Automation</span>
+                                    <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
                                 </div>
                             </div>
-                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500">
-                                <h4="font-semibold mb-1">Активировать business/lead-gen</h4>
-                                <p class="text-sm text-gray-400">Сделать рабочим скилл генерации лидов</p>
+                            <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
+                                <h4 class="font-semibold mb-1 line-through">Первая статья StroySales</h4>
+                                <p class="text-sm text-gray-400">"Прозрачные рольставни для веранды"</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">Content</span>
+                                    <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
+                                <h4 class="font-semibold mb-1 line-through">Вторая статья StroySales</h4>
+                                <p class="text-sm text-gray-400">"Защитные рольставни для дачи"</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">Content</span>
+                                    <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
+                                <h4 class="font-semibold mb-1 line-through">VPS Рига конфигурация</h4>
+                                <p class="text-sm text-gray-400">217.177.45.115, python3, SSH</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs text-gray-500">Infrastructure</span>
+                                    <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
+                                </div>
+                            </div>
+                            <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
+                                <h4 class="font-semibold mb-1 line-through">Growth Diagnostics стратегия</h4>
+                                <p class="text-sm text-gray-400">Документация бизнеса</p>
                                 <div class="flex justify-between items-center mt-2">
                                     <span class="text-xs text-gray-500">Business</span>
-                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Low</span>
+                                    <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
                                 </div>
                             </div>
-                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
-                                <h4 class="font-semibold mb-1">Загрузить данные в Knowledge Brain</h4>
-                                <p class="text-sm text-gray-400">Книги: Traction, Lean Analytics, Positioning</p>
+                            <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
+                                <h4 class="font-semibold mb-1 line-through">ChaikaStore аудит</h4>
+                                <p class="text-sm text-gray-400">Полный анализ + рекомендации</p>
                                 <div class="flex justify-between items-center mt-2">
-                                    <span class="text-xs text-gray-500">Knowledge</span>
-                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
-                                </div>
-                            </div>
-                            <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
-                                <h4 class="font-semibold mb-1">Настроить cron job для обновления</h4>
-                                <p class="text-sm text-gray-400">Dashboard автообновление в 12:00 MSK</p>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="text-xs text-gray-500">System</span>
-                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
+                                    <span class="text-xs text-gray-500">Consulting</span>
+                                    <span class="text-xs text-green-400"><i class="fas fa-check mr-1"></i>Done</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- In Progress -->
-                <div class="glass rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-blue-400"><i class="fas fa-spinner mr-2"></i>🚀 In Progress</h3>
-                        <span class="bg-blue-600 px-3 py-1 rounded-full text-sm" id="count-progress">2</span>
-                    </div>
-                    <div class="task-column space-y-3" id="progress-column">
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500">
-                            <h4 class="font-semibold mb-1">Apify интеграция</h4>
-                            <p class="text-sm text-gray-400">Парсинг поставщиков для StroySales</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">StroySales</span>
-                                <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">75%</span>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-purple-500">
-                            <h4 class="font-semibold mb-1">Чат-виджет stekloroll.ru</h4>
-                            <p class="text-sm text-gray-400">HTML/CSS + n8n + OpenRouter AI</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">StekloRoll</span>
-                                <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">60%</span>
-                            </div>
-                        </div>
+                        <!-- Show more button -->
+                        <button onclick="toggleDoneMore()" class="w-full py-2 text-sm text-gray-400 hover:text-white transition text-center">
+                            <i class="fas fa-ellipsis-h mr-2"></i>Показать ещё (6)
+                        </button>
                     </div>
                 </div>
-
-                <!-- Done -->
-                <div class="glass rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-green-400"><i class="fas fa-check-circle mr-2"></i>✅ Done</h3>
-                        <span class="bg-green-600 px-3 py-1 rounded-full text-sm" id="count-done">4</span>
-                    </div>
-                    <div class="task-column space-y-3" id="done-column">
-                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
-                            <h4 class="font-semibold mb-1 line-through">Установить n8n на VPS</h4>
-                            <p class="text-sm text-gray-400">http://47.237.82.141:5678</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Инфраструктура</span>
-                                <i class="fas fa-check text-green-400"></i>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
-                            <h4 class="font-semibold mb-1 line-through">Инвентаризация 32 скиллов</h4>
-                            <p class="text-sm text-gray-400">SKILLS_INVENTORY.md создан</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Система</span>
-                                <i class="fas fa-check text-green-400"></i>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
-                            <h4 class="font-semibold mb-1 line-through">Настроить Apify</h4>
-                            <p class="text-sm text-gray-400">API ключ проверен, скрипты готовы</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Парсинг</span>
-                                <i class="fas fa-check text-green-400"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Projects Grid -->
-        <section class="mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold"><i class="fas fa-rocket mr-3 text-blue-400"></i>Проекты</h2>
-                <div class="flex space-x-2">
-                    <button onclick="filterProjects('all')" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">Все</button>
-                    <button onclick="filterProjects('active')" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">Активные</button>
-                    <button onclick="filterProjects('paused')" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">На паузе</button>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid">
-                <!-- ARTALICO -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">🏭</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">ARTALICO</h3>
-                    <p class="text-gray-400 text-sm mb-4">Роллетные системы, CRM, автоматизация КП и счетов</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-blue-400">75%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 75%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">CRM</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Автоматизация</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Telegram Bot</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Доделать telegram-скилл</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>Автоматизация КП (75%)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- StekloRoll -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">🪟</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">StekloRoll</h3>
-                    <p class="text-gray-400 text-sm mb-4">Личный сайт роллет, чат-виджет, интеграция с CRM</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-blue-400">60%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 60%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Веб-сайт</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Чат-виджет</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">AI</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>Чат-виджет (60%)</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Интеграция с CRM</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- StroySales -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">🏗️</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">StroySales</h3>
-                    <p class="text-gray-400 text-sm mb-4">Каталог поставщиков рольставен, SEO-контент, парсер</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-yellow-400">45%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-yellow-500 h-2 rounded-full progress-bar" style="width: 45%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Supabase</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Парсинг</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">SEO</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Apify интеграция (75%)</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>SEO-контент для категорий</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- OKN Bureau -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">🏛️</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">OKN Bureau</h3>
-                    <p class="text-gray-400 text-sm mb-4">Архитектурное бюро, реставрация ОКН, адаптация зданий</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-yellow-400">30%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-yellow-500 h-2 rounded-full progress-bar" style="width: 30%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Архитектура</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">ОКН</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Реставрация</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>Создание сайта бюро</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Портфолио проектов</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Growth Diagnostics -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">📈</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Growth Diagnostics</h3>
-                    <p class="text-gray-400 text-sm mb-4">Консалтинг по росту, диагностика бизнеса, стратегия</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-blue-400">50%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 50%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Консалтинг</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Стратегия</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Автоматизация</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>ChaikaStore аудит</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Методология диагностики</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- English Tenses -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">📚</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">English Tenses</h3>
-                    <p class="text-gray-400 text-sm mb-4">Веб-приложение для изучения английских времен</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-blue-400">80%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 80%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">React</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Образование</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">EdTech</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Тренажёр времен (80%)</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>SEO-оптимизация</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Zoya Yakovleva Photo -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">📸</div>
-                        <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Активен</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Zoya Yakovleva Photo</h3>
-                    <p class="text-gray-400 text-sm mb-4">Фотосессии для беременных, SEO, чат-бот для записи</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-green-400">85%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full progress-bar" style="width: 85%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Фото</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">SEO</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Chat Widget</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>SEO-аудит (85%)</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Чат-бот для записи</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- n8n Automation -->
-                <div class="glass rounded-xl p-6 project-card" data-status="active">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-3xl">⚡</div>
-                        <span class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">Инфраструктура</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">n8n Automation Platform</h3>
-                    <p class="text-gray-400 text-sm mb-4">Автоматизация workflow, интеграции, бэкенд для проектов</p>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>Прогресс</span>
-                            <span class="text-green-400">90%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full progress-bar" style="width: 90%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">n8n</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">Docker</span>
-                        <span class="px-2 py-1 bg-gray-700 rounded text-xs">VPS</span>
-                    </div>
-                    
-                    <!-- Текущие задачи -->
-                    <div class="border-t border-gray-700 pt-3 mt-3">
-                        <p class="text-xs text-gray-500 mb-2 font-semibold">🎯 Текущие задачи:</p>
-                        <ul class="text-xs text-gray-400 space-y-1">
-                            <li class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Установлен на VPS (90%)</li>
-                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>Интеграция workflow</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Task Board -->
-        <section class="mb-8">
-            <h2 class="text-2xl font-bold mb-6"><i class="fas fa-tasks mr-3 text-yellow-400"></i>Task Board</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- To Do -->
-                <div class="glass rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-gray-300">📝 To Do</h3>
-                        <span class="bg-gray-700 px-3 py-1 rounded-full text-sm" id="count-todo">5</span>
-                    </div>
-                    <div class="task-column space-y-3" id="todo-column">
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-red-500">
-                            <h4 class="font-semibold mb-1">Доделать telegram-скилл</h4>
-                            <p class="text-sm text-gray-400">Мониторинг каналов через Telethon</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">ARTALICO</span>
-                                <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">High</span>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
-                            <h4 class="font-semibold mb-1">Загрузить книги в Knowledge Brain</h4>
-                            <p class="text-sm text-gray-400">Traction, Lean Analytics, Positioning</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Knowledge</span>
-                                <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Medium</span>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500">
-                            <h4 class="font-semibold mb-1">SEO-аудит zoya-yakovleva.ru</h4>
-                            <p class="text-sm text-gray-400">Исправить canonical, добавить Twitter Cards</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">SEO</span>
-                                <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Low</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- In Progress -->
-                <div class="glass rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-blue-400">🚀 In Progress</h3>
-                        <span class="bg-blue-600 px-3 py-1 rounded-full text-sm" id="count-progress">4</span>
-                    </div>
-                    <div class="task-column space-y-3" id="progress-column">
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500">
-                            <h4 class="font-semibold mb-1">Apify интеграция</h4>
-                            <p class="text-sm text-gray-400">Парсинг поставщиков для StroySales</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">StroySales</span>
-                                <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">75%</span>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800 p-4 rounded-lg border-l-4 border-purple-500">
-                            <h4 class="font-semibold mb-1">Чат-виджет stekloroll.ru</h4>
-                            <p class="text-sm text-gray-400">HTML/CSS + n8n + OpenRouter AI</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">StekloRoll</span>
-                                <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">60%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Done -->
-                <div class="glass rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-green-400">✅ Done</h3>
-                        <span class="bg-green-600 px-3 py-1 rounded-full text-sm" id="count-done">8</span>
-                    </div>
-                    <div class="task-column space-y-3" id="done-column">
-                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
-                            <h4 class="font-semibold mb-1 line-through">Установить n8n на VPS</h4>
-                            <p class="text-sm text-gray-400">http://47.237.82.141:5678</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Инфраструктура</span>
-                                <i class="fas fa-check text-green-400"></i>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
-                            <h4 class="font-semibold mb-1 line-through">Инвентаризация 32 скиллов</h4>
-                            <p class="text-sm text-gray-400">SKILLS_INVENTORY.md создан</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Система</span>
-                                <i class="fas fa-check text-green-400"></i>
-                            </div>
-                        </div>
-                        <div class="task-card bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-500 opacity-75">
-                            <h4 class="font-semibold mb-1 line-through">Apify setup</h4>
-                            <p class="text-sm text-gray-400">API ключ проверен, скрипты готовы</p>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-gray-500">Парсинг</span>
-                                <i class="fas fa-check text-green-400"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Skills Grid -->
-        <section class="mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold"><i class="fas fa-tools mr-3 text-green-400"></i>Skills Arsenal (32)</h2>
-                <div class="flex space-x-2">
-                    <input type="text" id="skill-search" placeholder="Поиск скиллов..." 
-                           class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                    <select id="skill-filter" class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
-                        <option value="all">Все категории</option>
-                        <option value="artalico">ARTALICO</option>
-                        <option value="telegram">Telegram</option>
-                        <option value="youtube">YouTube</option>
-                        <option value="automation">Автоматизация</option>
-                        <option value="seo">SEO/Парсинг</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="skills-grid">
-                <!-- Skills will be populated by JS -->
             </div>
         </section>
 
         <!-- Activity Log -->
         <section class="glass rounded-xl p-6">
-            <h2 class="text-2xl font-bold mb-6"><i class="fas fa-history mr-3 text-purple-400"></i>Activity Log</h2>
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-history mr-3 text-purple-400"></i>
+                Activity Log 
+                <span class="text-sm text-gray-400 font-normal">— Последние действия</span>
+            </h2>
             <div class="space-y-4 max-h-96 overflow-y-auto" id="activity-log">
-                <div class="flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg">
+                <div class="activity-item flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg cursor-pointer" onclick="toggleActivity(this)">
                     <div class="text-green-400 mt-1"><i class="fas fa-check-circle"></i></div>
-                    <div>
-                        <p class="font-semibold">Apify успешно настроен</p>
-                        <p class="text-sm text-gray-400">API key проверен, $5 credits доступны</p>
-                        <p class="text-xs text-gray-500 mt-1">14:32 MSK</p>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <p class="font-semibold">Статья "Секционные ворота" опубликована</p>
+                            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Тестовая статья для проверки workflow</p>
+                        <p class="text-xs text-gray-500 mt-1">18 марта 2026, 01:17 MSK</p>
+                        <div class="activity-details hidden mt-3 pt-3 border-t border-gray-700 text-sm text-gray-300">
+                            <p><strong>URL:</strong> <a href="https://stroysales.ru/blog/sektsionnye-vorota-garazh/" class="text-blue-400 underline">stroysales.ru/blog/sektsionnye-vorota-garazh/</a></p>
+                            <p class="mt-2"><strong>Проверка workflow:</strong></p>
+                            <ul class="list-disc list-inside text-gray-400 mt-1">
+                                <li>✅ Файл в public/blog/</li>
+                                <li>✅ Добавлен в page.tsx</li>
+                                <li>✅ Push в main</li>
+                                <li>✅ Vercel deploy</li>
+                                <li>✅ URL доступен (200 OK)</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg">
-                    <div class="text-blue-400 mt-1"><i class="fas fa-list"></i></div>
-                    <div>
-                        <p class="font-semibold">Инвентаризация скиллов завершена</p>
-                        <p class="text-sm text-gray-400">Найдено 32 скилла, создан SKILLS_INVENTORY.md</p>
-                        <p class="text-xs text-gray-500 mt-1">13:48 MSK</p>
+
+                <div class="activity-item flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg cursor-pointer" onclick="toggleActivity(this)">
+                    <div class="text-blue-400 mt-1"><i class="fas fa-robot"></i></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <p class="font-semibold">Создан cron job для StroySales</p>
+                            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Автоматическая генерация статей 15:00 MSK</p>
+                        <p class="text-xs text-gray-500 mt-1">17 марта 2026, 23:09 MSK</p>
+                        <div class="activity-details hidden mt-3 pt-3 border-t border-gray-700 text-sm text-gray-300">
+                            <p><strong>Cron ID:</strong> <code>296c7be6-c28d-445e-9d9a-c8d065d4eb48</code></p>
+                            <p class="mt-2"><strong>Расписание:</strong> 0 15 * * * (Europe/Moscow)</p>
+                            <p class="mt-2"><strong>Следующий запуск:</strong> 18 марта 2026, 15:00 MSK</p>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg">
-                    <div class="text-yellow-400 mt-1"><i class="fas fa-code"></i></div>
-                    <div>
-                        <p class="font-semibold">Создан SEO-аудит скрипт</p>
-                        <p class="text-sm text-gray-400">Puppeteer + полный анализ сайтов</p>
-                        <p class="text-xs text-gray-500 mt-1">13:15 MSK</p>
+
+                <div class="activity-item flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg cursor-pointer" onclick="toggleActivity(this)">
+                    <div class="text-yellow-400 mt-1"><i class="fas fa-file-alt"></i></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <p class="font-semibold">Статья "Защитные рольставни" опубликована</p>
+                            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Вторая статья в блоге StroySales</p>
+                        <p class="text-xs text-gray-500 mt-1">17 марта 2026, 22:54 MSK</p>
+                        <div class="activity-details hidden mt-3 pt-3 border-t border-gray-700 text-sm text-gray-300">
+                            <p><strong>Тема:</strong> Защитные рольставни для дачи</p>
+                            <p class="mt-2"><strong>Анкор:</strong> StekloRoll → /rolstavni_glukhie</p>
+                            <p class="mt-2"><strong>Изображения:</strong> 2 фото из Tilda</p>
+                            <p class="mt-2"><strong>URL:</strong> <a href="https://stroysales.ru/blog/zashitnye-rolstavni-dlya-dachi/" class="text-blue-400 underline">stroysales.ru/blog/zashitnye-rolstavni-dlya-dachi/</a></p>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg">
-                    <div class="text-purple-400 mt-1"><i class="fas fa-robot"></i></div>
-                    <div>
-                        <p class="font-semibold">Анализ Product Hunt</p>
-                        <p class="text-sm text-gray-400">Топ-20 продуктов марта 2026</p>
-                        <p class="text-xs text-gray-500 mt-1">12:45 MSK</p>
+
+                <div class="activity-item flex items-start space-x-4 p-4 bg-gray-800/50 rounded-lg cursor-pointer" onclick="toggleActivity(this)">
+                    <div class="text-purple-400 mt-1"><i class="fas fa-chart-line"></i></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <p class="font-semibold">Анализ бизнес-трендов (март 2026)</p>
+                            <i class="fas fa-chevron-down text-gray-500 text-sm"></i>
+                        </div>
+                        <p class="text-sm text-gray-400">Топ-7 трендов для строительного бизнеса</p>
+                        <p class="text-xs text-gray-500 mt-1">17 марта 2026, 21:34 MSK</p>
+                        <div class="activity-details hidden mt-3 pt-3 border-t border-gray-700 text-sm text-gray-300">
+                            <p><strong>Ключевые тренды:</strong></p>
+                            <ol class="list-decimal list-inside text-gray-400 mt-2 space-y-1">
+                                <li>AI-агенты для B2B</li>
+                                <li>Vertical SaaS + Marketplace</li>
+                                <li>IoT для обычных продуктов</li>
+                                <li>No-Code CRM</li>
+                                <li>AI-генерация контента</li>
+                                <li>Retention-as-a-Service</li>
+                                <li>Hardware-as-a-Service</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
             </div>
+            <button onclick="loadMoreActivities()" class="w-full mt-4 py-3 text-gray-400 hover:text-white transition text-center border-t border-gray-700">
+                <i class="fas fa-history mr-2"></i>Загрузить больше истории
+            </button>
         </section>
     </main>
 
@@ -711,47 +774,10 @@
     </footer>
 
     <script>
-        // Skills data
-        const skills = [
-            { name: "artalico-crm", category: "artalico", icon: "🏭", status: "active" },
-            { name: "artalico-dealer-bot", category: "artalico", icon: "🤖", status: "active" },
-            { name: "artalico-pdf", category: "artalico", icon: "📄", status: "active" },
-            { name: "stroysales-parser", category: "artalico", icon: "🏗️", status: "active" },
-            { name: "stroysales-content", category: "artalico", icon: "✍️", status: "active" },
-            { name: "n8n", category: "automation", icon: "⚡", status: "active" },
-            { name: "automation-workflows", category: "automation", icon: "🔄", status: "active" },
-            { name: "self-improving-agent", category: "automation", icon: "📈", status: "active" },
-            { name: "capability-evolver", category: "automation", icon: "🧬", status: "active" },
-            { name: "proactive-agent", category: "automation", icon: "🎯", status: "active" },
-            { name: "humanizer", category: "automation", icon: "👤", status: "active" },
-            { name: "telegram", category: "telegram", icon: "💬", status: "warning" },
-            { name: "telegram-voice-whisper", category: "telegram", icon: "🎤", status: "active" },
-            { name: "telegram-file-sender", category: "telegram", icon: "📎", status: "active" },
-            { name: "web-seo-tools", category: "seo", icon: "🔍", status: "active" },
-            { name: "summarize", category: "seo", icon: "📝", status: "active" },
-            { name: "research", category: "seo", icon: "🔬", status: "active" },
-            { name: "youtube-watcher", category: "youtube", icon: "📺", status: "active" },
-            { name: "youtube-transcriber", category: "youtube", icon: "🎬", status: "active" },
-            { name: "youtube-subtitles", category: "youtube", icon: "🎞️", status: "active" },
-            { name: "youtube-interview-processor", category: "youtube", icon: "🎙️", status: "active" },
-            { name: "whisper-transcriber", category: "youtube", icon: "🗣️", status: "active" },
-            { name: "rapidapi-youtube", category: "youtube", icon: "🔌", status: "active" },
-            { name: "business", category: "automation", icon: "💼", status: "warning" },
-            { name: "business/lead-gen", category: "automation", icon: "🎯", status: "warning" },
-            { name: "product-hunt-monitor", category: "automation", icon: "🚀", status: "active" },
-            { name: "news", category: "automation", icon: "📰", status: "active" },
-            { name: "memory", category: "automation", icon: "🧠", status: "active" },
-            { name: "knowledge-brain", category: "automation", icon: "📚", status: "active" },
-            { name: "clawddocs", category: "automation", icon: "📖", status: "active" },
-            { name: "tasks", category: "automation", icon: "✅", status: "active" },
-            { name: "design", category: "automation", icon: "🎨", status: "active" }
-        ];
-
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateTime();
             setInterval(updateTime, 1000);
-            renderSkills();
             updateLastSync();
         });
 
@@ -772,77 +798,56 @@
             document.getElementById('footer-sync').textContent = now.toLocaleString('ru-RU');
         }
 
-        function renderSkills(filter = 'all', search = '') {
-            const grid = document.getElementById('skills-grid');
-            grid.innerHTML = '';
-            
-            skills.forEach(skill => {
-                if (filter !== 'all' && skill.category !== filter) return;
-                if (search && !skill.name.toLowerCase().includes(search.toLowerCase())) return;
-                
-                const statusColor = skill.status === 'active' ? 'border-green-500' : 'border-yellow-500';
-                const statusBg = skill.status === 'active' ? 'bg-green-500/10' : 'bg-yellow-500/10';
-                
-                const card = document.createElement('div');
-                card.className = `skill-card glass rounded-lg p-4 border-l-4 ${statusColor} ${statusBg} cursor-pointer`;
-                card.innerHTML = `
-                    <div class="text-2xl mb-2">${skill.icon}</div>
-                    <h4 class="font-semibold text-sm truncate" title="${skill.name}">${skill.name}</h4>
-                    <span class="text-xs text-gray-400">${skill.category}</span>
-                `;
-                card.onclick = () => alert('Skill: ' + skill.name + '\nStatus: ' + skill.status);
-                grid.appendChild(card);
-            });
-        }
-
-        // Filter handlers
-        document.getElementById('skill-filter')?.addEventListener('change', (e) => {
-            const search = document.getElementById('skill-search')?.value || '';
-            renderSkills(e.target.value, search);
-        });
-
-        document.getElementById('skill-search')?.addEventListener('input', (e) => {
-            const filter = document.getElementById('skill-filter')?.value || 'all';
-            renderSkills(filter, e.target.value);
-        });
-
-        function filterProjects(status) {
-            const cards = document.querySelectorAll('.project-card');
-            cards.forEach(card => {
-                if (status === 'all' || card.dataset.status === status) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        function refreshData() {
-            const btn = document.querySelector('button[onclick="refreshData()"]');
-            const original = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Обновление...';
-            btn.disabled = true;
-            
-            setTimeout(() => {
-                updateLastSync();
-                btn.innerHTML = original;
-                btn.disabled = false;
-                alert('Данные обновлены!');
-            }, 1000);
-        }
-
-        // Toggle To Do list expansion
-        function toggleTodo() {
-            const hidden = document.getElementById('todo-hidden');
-            const btn = document.getElementById('todo-toggle-btn');
-            
-            if (hidden.classList.contains('hidden')) {
-                hidden.classList.remove('hidden');
-                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Свернуть';
-            } else {
-                hidden.classList.add('hidden');
-                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Все';
+        // Toggle task details
+        function toggleTask(taskId) {
+            const details = document.getElementById(taskId);
+            if (details) {
+                details.classList.toggle('expanded');
             }
+        }
+
+        // Toggle column expansion
+        function toggleColumn(column) {
+            const columnEl = document.getElementById(column + '-column');
+            const btn = event.currentTarget;
+            if (columnEl) {
+                columnEl.classList.toggle('expanded');
+                btn.classList.toggle('rotated');
+            }
+        }
+
+        // Toggle more done tasks
+        function toggleDoneMore() {
+            const more = document.getElementById('done-more');
+            const btn = event.currentTarget;
+            if (more) {
+                more.classList.toggle('hidden');
+                btn.innerHTML = more.classList.contains('hidden') 
+                    ? '<i class="fas fa-ellipsis-h mr-2"></i>Показать ещё (6)'
+                    : '<i class="fas fa-chevron-up mr-2"></i>Свернуть';
+            }
+        }
+
+        // Toggle activity details
+        function toggleActivity(element) {
+            const details = element.querySelector('.activity-details');
+            const icon = element.querySelector('.fa-chevron-down');
+            if (details) {
+                details.classList.toggle('hidden');
+                if (icon) {
+                    icon.style.transform = details.classList.contains('hidden') ? '' : 'rotate(180deg)';
+                }
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            location.reload();
+        }
+
+        // Load more activities (placeholder)
+        function loadMoreActivities() {
+            alert('Загрузка истории активности... (в реальной версии — подгрузка из API)');
         }
     </script>
 </body>
