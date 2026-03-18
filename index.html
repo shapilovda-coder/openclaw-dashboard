@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>🦾 OpenClaw Mission Control v2.1</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        .glass {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .task-card {
+            background: rgba(55, 65, 81, 0.8);
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .task-card:hover { 
+            transform: translateX(4px);
+            background: rgba(55, 65, 81, 1);
+        }
+        .task-card.red { border-left-color: #ef4444; }
+        .task-card.yellow { border-left-color: #eab308; }
+        .task-card.blue { border-left-color: #3b82f6; }
+        .task-card.green { border-left-color: #22c55e; }
+        .task-card.purple { border-left-color: #a855f7; }
+        
+        .task-details {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            animation: fadeIn 0.3s ease;
+        }
+        .task-details.show { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+        .expand-icon.rotated { transform: rotate(180deg); }
+        
+        .column-section {
+            max-height: 600px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+        .column-section.expanded { max-height: none; }
+        
+        .activity-item {
+            background: rgba(55, 65, 81, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .activity-item:hover { background: rgba(55, 65, 81, 0.8); }
+        
+        .activity-details {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .activity-details.show { display: block; }
+        
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            display: inline-block;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .btn-expand {
+            background: rgba(59, 130, 246, 0.8);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-expand:hover { background: rgba(59, 130, 246, 1); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <header class="glass sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="text-3xl">🦾</div>
+                <div>
+                    <h1 class="text-2xl font-bold gradient-text">OpenClaw Mission Control</h1>
+                    <p class="text-sm text-gray-400">Управление проектами и автоматизация v2.1</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="text-right">
+                    <div id="clock" class="text-xl font-mono font-bold">--:--:-- MSK</div>
+                    <div class="text-xs text-gray-400">Обновлено: 18 марта 2026</div>
+                </div>
+                <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-sync-alt mr-2"></i>Обновить
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass rounded-xl p-6">
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Активных проектов</p>
+                        <p class="text-3xl font-bold">8</p>
+                    </div>
+                    <div class="text-3xl text-blue-400">📊</div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Всего скиллов</p>
+                        <p class="text-3xl font-bold text-green-400">32</p>
+                    </div>
+                    <div class="text-3xl text-green-400">🛠️</div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Задач всего</p>
+                        <p class="text-3xl font-bold text-yellow-400">24</p>
+                    </div>
+                    <div class="text-3xl text-yellow-400">🎯</div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Статус агента</p>
+                        <div class="flex items-center space-x-2">
+                            <span class="pulse-dot"></span>
+                            <p class="text-lg font-bold text-green-400">Online</p>
+                        </div>
+                    </div>
+                    <div class="text-3xl text-green-400">🤖</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Board -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-tasks mr-3 text-yellow-400"></i>
+                Task Board 
+                <span class="text-sm text-gray-400 font-normal">— Нажми на задачу для деталей</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- TO DO COLUMN -->
+                <div class="glass rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-300">📝 To Do (<span id="todo-count">8</span>)</h3>
+                        <button onclick="expandColumn('todo')" class="btn-expand">
+                            <i class="fas fa-expand mr-1"></i>Все
+                        </button>
+                    </div>
+                    <div id="todo-list" class="column-section">
+                        <!-- Task 1 -->
+                        <div class="task-card red" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">Доделать telegram-скилл</h4>
+                                    <p class="text-sm text-gray-400 mt-1">Мониторинг каналов через Telethon</p>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-xs bg-gray-700 px-2 py-1 rounded">ARTALICO</span>
+                                        <span class="text-xs bg-red-500/30 text-red-300 px-2 py-1 rounded">High</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down expand-icon text-gray-500"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Описание:</strong> Создать рабочий скрипт мониторинга Telegram-каналов с AI-сводкой через Claude</p>
+                                <p class="text-sm text-gray-400 mb-2"><strong>Шаги:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc ml-4 mb-2">
+                                    <li>Получить TG_API_ID и TG_API_HASH от пользователя</li>
+                                    <li>Протестировать channel_monitor.py на VPS</li>
+                                    <li>Настроить cron для автозапуска каждые 2 дня</li>
+                                </ul>
+                                <p class="text-sm text-yellow-400">⚠️ <strong>Блокер:</strong> Нужны API ключи от пользователя</p>
+                            </div>
+                        </div>
+
+                        <!-- Task 2 -->
+                        <div class="task-card yellow" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">Загрузить книги в Knowledge Brain</h4>
+                                    <p class="text-sm text-gray-400 mt-1">Traction, Lean Analytics, Positioning</p>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-xs bg-gray-700 px-2 py-1 rounded">Knowledge</span>
+                                        <span class="text-xs bg-yellow-500/30 text-yellow-300 px-2 py-1 rounded">Medium</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down expand-icon text-gray-500"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Цель:</strong> Загрузить ключевые книги в векторное хранилище для RAG (Retrieval Augmented Generation)</p>
+                                <p class="text-sm text-gray-400 mb-2"><strong>Список:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc ml-4">
+                                    <li>Traction — Gabriel Weinberg (стратегии роста)</li>
+                                    <li>Lean Analytics — Alistair Croll (метрики стартапов)</li>
+                                    <li>Positioning — Al Ries & Jack Trout (позиционирование)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Task 3 -->
+                        <div class="task-card blue" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">SEO-аудит zoya-yakovleva.ru</h4>
+                                    <p class="text-sm text-gray-400 mt-1">Исправить canonical, добавить Twitter Cards</p>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-xs bg-gray-700 px-2 py-1 rounded">SEO</span>
+                                        <span class="text-xs bg-blue-500/30 text-blue-300 px-2 py-1 rounded">Low</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down expand-icon text-gray-500"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Найденные проблемы:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc ml-4">
+                                    <li>❌ Отсутствует canonical URL</li>
+                                    <li>❌ Нет Twitter Cards meta tags</li>
+                                    <li>⚠️ JSON-LD нуждается в валидации</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Task 4 (hidden by default) -->
+                        <div class="task-card yellow hidden-task" onclick="toggleDetails(this)" style="display:none">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">Настроить cron job для статей</h4>
+                                    <p class="text-sm text-gray-400 mt-1">Автоматическая генерация StroySales статей</p>
+                                </div>
+                                <i class="fas fa-chevron-down expand-icon text-gray-500"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300">✅ <strong>Создано:</strong> Cron ID: 296c7be6...</p>
+                                <p class="text-sm text-gray-400">Расписание: 15:00 MSK ежедневно</p>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button onclick="toggleMoreTasks('todo')" id="todo-more-btn" class="text-sm text-gray-400 hover:text-white">
+                                <i class="fas fa-ellipsis-h mr-2"></i>Показать ещё 5 задач
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IN PROGRESS COLUMN -->
+                <div class="glass rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-blue-400">🚀 In Progress (4)</h3>
+                        <button onclick="expandColumn('progress')" class="btn-expand">
+                            <i class="fas fa-expand mr-1"></i>Все
+                        </button>
+                    </div>
+                    <div id="progress-list" class="column-section">
+                        <div class="task-card blue" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div class="w-full">
+                                    <h4 class="font-semibold">Apify интеграция</h4>
+                                    <p class="text-sm text-gray-400 mt-1">Парсинг поставщиков для StroySales</p>
+                                    <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-xs bg-gray-700 px-2 py-1 rounded">StroySales</span>
+                                        <span class="text-xs bg-blue-500/30 text-blue-300 px-2 py-1 rounded">75%</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down expand-icon text-gray-500 ml-2"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Прогресс:</strong></p>
+                                <ul class="text-sm text-gray-400 list-disc ml-4">
+                                    <li>✅ API ключ проверен</li>
+                                    <li>✅ Скрипты apify_quickstart.py и apify_scraper.py созданы</li>
+                                    <li>⏳ Интеграция с n8n workflow</li>
+                                </ul>
+                                <p class="text-sm text-yellow-400 mt-2">⚠️ Блокер: ForumHouse не парсится (DDoS-Guard)</p>
+                            </div>
+                        </div>
+
+                        <div class="task-card purple" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div class="w-full">
+                                    <h4 class="font-semibold">Чат-виджет stekloroll.ru</h4>
+                                    <p class="text-sm text-gray-400 mt-1">HTML/CSS + n8n + OpenRouter AI</p>
+                                    <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                                        <div class="bg-purple-500 h-2 rounded-full" style="width: 60%"></div>
+                                    </div>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-xs bg-gray-700 px-2 py-1 rounded">StekloRoll</span>
+                                        <span class="text-xs bg-purple-500/30 text-purple-300 px-2 py-1 rounded">60%</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down expand-icon text-gray-500 ml-2"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300 mb-2"><strong>Сделано:</strong> HTML/CSS виджет, n8n workflow импортирован, деплой на GitHub</p>
+                                <p class="text-sm text-gray-400"><strong>В процессе:</strong> Добавить OpenRouter credential, активировать workflow, тест webhook</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DONE COLUMN -->
+                <div class="glass rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-green-400">✅ Done (12)</h3>
+                        <button onclick="expandColumn('done')" class="btn-expand">
+                            <i class="fas fa-expand mr-1"></i>Все
+                        </button>
+                    </div>
+                    <div id="done-list" class="column-section">
+                        <div class="task-card green opacity-75" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold line-through">Установить n8n на VPS</h4>
+                                    <p class="text-sm text-gray-400 mt-1">http://47.237.82.141:5678</p>
+                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded mt-2 inline-block">Инфраструктура</span>
+                                </div>
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300">✅ Docker установлен, n8n на порту 5678, Credentials: admin/Chinasouthern12!</p>
+                                <p class="text-sm text-yellow-400 mt-1">⚠️ Порт заблокирован Alibaba Cloud firewall</p>
+                            </div>
+                        </div>
+
+                        <div class="task-card green opacity-75" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold line-through">Инвентаризация 32 скиллов</h4>
+                                    <p class="text-sm text-gray-400 mt-1">SKILLS_INVENTORY.md создан</p>
+                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded mt-2 inline-block">Система</span>
+                                </div>
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300">Всего: 32 скилла | Активных: 22 | Требуют внимания: 5 | Каркасы: 5</p>
+                            </div>
+                        </div>
+
+                        <div class="task-card green opacity-75" onclick="toggleDetails(this)">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold line-through">Настроить Apify</h4>
+                                    <p class="text-sm text-gray-400 mt-1">API ключ проверен, скрипты готовы</p>
+                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded mt-2 inline-block">Парсинг</span>
+                                </div>
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div class="task-details">
+                                <p class="text-sm text-gray-300">API Key: ✅ Валиден | План: FREE ($5/мес) | Файлы: apify_quickstart.py, apify_scraper.py</p>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button onclick="toggleMoreTasks('done')" id="done-more-btn" class="text-sm text-gray-400 hover:text-white">
+                                <i class="fas fa-ellipsis-h mr-2"></i>Показать ещё 9 задач
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="glass rounded-xl p-6">
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-history mr-3 text-purple-400"></i>
+                Activity Log
+            </h2>
+            <div class="space-y-4">
+                <div class="activity-item" onclick="toggleActivity(this)">
+                    <div class="flex justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-green-400"><i class="fas fa-check-circle"></i></span>
+                                <p class="font-semibold">Статья "Секционные ворота" опубликована</p>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-1">Тестовая статья для проверки workflow</p>
+                            <p class="text-xs text-gray-500 mt-1">18 марта 2026, 01:17 MSK</p>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-500"></i>
+                    </div>
+                    <div class="activity-details">
+                        <p class="text-sm text-gray-300">URL: <a href="https://stroysales.ru/blog/sektsionnye-vorota-garazh/" class="text-blue-400 underline" target="_blank">stroysales.ru/blog/sektsionnye-vorota-garazh/</a></p>
+                    </div>
+                </div>
+
+                <div class="activity-item" onclick="toggleActivity(this)">
+                    <div class="flex justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-blue-400"><i class="fas fa-robot"></i></span>
+                                <p class="font-semibold">Создан cron job для StroySales</p>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-1">Автоматическая генерация статей 15:00 MSK</p>
+                            <p class="text-xs text-gray-500 mt-1">17 марта 2026, 23:09 MSK</p>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-500"></i>
+                    </div>
+                    <div class="activity-details">
+                        <p class="text-sm text-gray-300">Cron ID: 296c7be6-c28d-445e-9d9a-c8d065d4eb48 | Расписание: 15:00 MSK ежедневно</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="glass mt-12 px-6 py-4 text-center text-gray-400">
+        <p>OpenClaw Mission Control © 2026 | Build: v2.1.18.03.2026</p>
+    </footer>
+
+    <script>
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            const msk = now.toLocaleTimeString('ru-RU', { 
+                timeZone: 'Europe/Moscow',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            document.getElementById('clock').textContent = msk + ' MSK';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Toggle task details
+        function toggleDetails(element) {
+            const details = element.querySelector('.task-details');
+            const icon = element.querySelector('.expand-icon');
+            if (details) {
+                details.classList.toggle('show');
+                if (icon) icon.classList.toggle('rotated');
+            }
+        }
+
+        // Toggle activity details
+        function toggleActivity(element) {
+            const details = element.querySelector('.activity-details');
+            const icon = element.querySelector('.fa-chevron-down');
+            if (details) {
+                details.classList.toggle('show');
+                if (icon) icon.classList.toggle('rotated');
+            }
+        }
+
+        // Expand column
+        function expandColumn(column) {
+            const list = document.getElementById(column + '-list');
+            if (list) {
+                list.classList.toggle('expanded');
+            }
+        }
+
+        // Toggle more tasks
+        function toggleMoreTasks(column) {
+            const hidden = document.querySelectorAll('#' + column + '-list .hidden-task');
+            const btn = document.getElementById(column + '-more-btn');
+            hidden.forEach(task => {
+                task.style.display = task.style.display === 'none' ? 'block' : 'none';
+            });
+            if (btn) {
+                btn.innerHTML = hidden[0].style.display === 'none' 
+                    ? '<i class="fas fa-ellipsis-h mr-2"></i>Показать ещё'
+                    : '<i class="fas fa-chevron-up mr-2"></i>Свернуть';
+            }
+        }
+    </script>
+</body>
+</html>
